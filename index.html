@@ -136,6 +136,7 @@ tr.rb .dtxt{border-left-color:#2460c8;}tr.rg .dtxt{border-left-color:#888;}tr.rp
 .add-cancel-btn{padding:7px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;cursor:pointer;}
 .add-cancel-btn:hover{opacity:.75;}
 </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="file:///C:/Users/YMX/Downloads/index_files/chart.umd.min.js.%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C"></script><script src="file:///C:/Users/YMX/Downloads/index_files/chart.umd.min.js.%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C"></script><script src="file:///C:/Users/YMX/Downloads/index_files/chart.umd.min.js.%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C"></script><script src="file:///C:/Users/YMX/Downloads/index_files/chart.umd.min.js.%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C"></script><script src="file:///C:/Users/YMX/Downloads/index_files/chart.umd.min.js.%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C"></script><script src="file:///C:/Users/YMX/Downloads/index_files/chart.umd.min.js.%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C"></script><script src="file:///C:/Users/YMX/Downloads/index_files/chart.umd.min.js.%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C"></script><script src="file:///C:/Users/YMX/Downloads/index_files/chart.umd.min.js.%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C"></script><script src="./index_files/chart.umd.min.js.다운로드"></script></head><body style=""><div id="todoView" class="">
   <div class="todo-hdr">
     <button class="todo-back" onclick="hideTodo()">← 대시보드로 돌아가기</button>
@@ -162,6 +163,7 @@ tr.rb .dtxt{border-left-color:#2460c8;}tr.rg .dtxt{border-left-color:#888;}tr.rp
   <div><div class="hdr-title">S-ARMS 운영 이슈 대시보드</div><div class="hdr-sub">전체 이슈 현황</div></div>
 
   <button id="todoOpenBtn" class="todo-btn" onclick="showTodo()">📋 To Do List</button>
+  <button class="todo-btn" style="background:linear-gradient(135deg,#2dcfa0,#1a8a6a);margin-left:8px" onclick="downloadXLSX()">⬇ 엑셀 다운로드</button>
 </header>
 <div class="wrap">
   <div class="sec">누적 이슈 현황</div>
@@ -676,6 +678,32 @@ function getFiltered(){
     if(srch&&!i.summary.toLowerCase().includes(srch)&&!(i.details||[]).map(d=>d.text).join(' ').toLowerCase().includes(srch))return false;
     return true;
   });
+}
+function downloadXLSX(){
+  if(typeof XLSX==='undefined'){alert('잠시 후 다시 시도해주세요.');return;}
+  const wb=XLSX.utils.book_new();
+  // 시트1: 이슈 리포트
+  const issHdr=['ID','우선순위','현장','카테고리','요약','상태','이슈노트'];
+  const issRows=[issHdr];
+  getSorted(getFiltered()).forEach(function(i){
+    const notes=(i.details||[]).map(function(d){return d.text;}).join('\n────────\n');
+    const st=i.status||'진행중';
+    issRows.push([i.id,i.priority,i.site,i.category,i.summary,st,notes]);
+  });
+  const ws1=XLSX.utils.aoa_to_sheet(issRows);
+  ws1['!cols']=[{wch:8},{wch:8},{wch:14},{wch:14},{wch:50},{wch:10},{wch:60}];
+  XLSX.utils.book_append_sheet(wb,ws1,'이슈 리포트');
+  // 시트2: TO DO List
+  const tdHdr=['날짜','번호','항목','담당','상태','비고'];
+  const tdRows=[tdHdr];
+  TODO_DATA.forEach(function(t){
+    tdRows.push([t.created,t.no,t.task,t.dept,t.status,t.note||'']);
+  });
+  const ws2=XLSX.utils.aoa_to_sheet(tdRows);
+  ws2['!cols']=[{wch:12},{wch:6},{wch:50},{wch:10},{wch:10},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,ws2,'TO DO List');
+  const today=new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb,'S-ARMS_이슈리포트_'+today+'.xlsx');
 }
 function getSorted(arr){
   const a=[...arr];
