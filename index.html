@@ -714,6 +714,7 @@ function getSorted(arr){
   else if(sortKey==='date'){a.sort((x,y)=>sortAsc?getLastDate(x).localeCompare(getLastDate(y)):getLastDate(y).localeCompare(getLastDate(x)));}
   return a;
 }
+function render(){
   const filtered=getFiltered(),sorted=getSorted(filtered);
   const total=sorted.length,totalPages=Math.max(1,Math.ceil(total/PER_PAGE));
   if(curPage>totalPages)curPage=totalPages;
